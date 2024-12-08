@@ -1,0 +1,9 @@
+name: "DNS 自动化脚本"
+type: cloudflare # 使用的域名注册服务商 (目前仅支持 cloudflare)
+duration: 60 # 脚本检查间隔时间 (秒/s, 最小 60s)
+get_my_ip_api: ./secret/get_my_ip/get_my_ip_api.secret.yml # get_my_ip api 接口
+cloudflare:
+  secret: ./secret/cloudflare/cloudflare.secret.yml # cloudflare secret 文件路径
+  proxy: true # 是否由 CDN 代理
+  ttl: 300 # DNS 缓存生存时间 (秒/s, 最小 300s = 5min)
+  type: A # 域名记录类型 (默认为 A, 主记录)

@@ -1,0 +1,15 @@
+.idea/
+.env*
+storage/logs/*
+storage/tmp/*
+!storage/logs/.gitkeep
+!storage/tmp/.gitkeep
+!.env.example
+!.env.docker
+*.exe
+!bin/.gitkeep
+bin/*
+!secret/cloudflare/.gitkeep
+secret/cloudflare/*
+!secret/get_my_ip/.gitkeep
+secret/get_my_ip/*
