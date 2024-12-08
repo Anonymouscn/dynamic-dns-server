@@ -13,3 +13,4 @@ bin/*
 secret/cloudflare/*
 !secret/get_my_ip/.gitkeep
 secret/get_my_ip/*
+.DS_Store
