@@ -1,10 +1,11 @@
 package cloudflare
 
 import (
+	"net/http"
+
 	"github.com/Anonymouscn/dynamic-dns-server/data/req/cloudflare"
 	"github.com/Anonymouscn/dynamic-dns-server/data/resp"
 	"github.com/Anonymouscn/go-partner/restful"
-	"net/http"
 )
 
 // GetDNSRecordList 获取 DNS 信息

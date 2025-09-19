@@ -11,6 +11,9 @@ storage/tmp/*
 bin/*
 !secret/cloudflare/.gitkeep
 secret/cloudflare/*
+!secret/aliyun/.gitkeep
+!secret/aliyun/aliyun.secret.template.yml
+secret/aliyun/*
 !secret/get_my_ip/.gitkeep
 secret/get_my_ip/*
 .DS_Store

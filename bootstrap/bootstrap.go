@@ -2,11 +2,12 @@ package bootstrap
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/Anonymouscn/dynamic-dns-server/constant"
 	"github.com/Anonymouscn/dynamic-dns-server/provider"
 	"gopkg.in/yaml.v3"
-	"log"
-	"os"
 )
 
 // Init 脚本初始化
@@ -39,17 +40,18 @@ func InitScriptConfig() {
 	case "cloudflare":
 		log.Println("cloudflare dynamic DNS is active")
 		InitCloudflareSecret()
+	case "aliyun":
+		log.Println("aliyun dynamic DNS is active")
+		InitAliyunSecret()
 	}
 }
 
-// InitCloudflareSecret 初始化 Cloudflare secret 配置
-func InitCloudflareSecret() {
-	conf := provider.ScriptConfig
-	path := conf.Cloudflare.Secret
+// readSecret 读取私密文件配置
+func readSecret(path string, target interface{}) {
 	if path != "" {
 		if _, err := os.Stat(path); err != nil {
 			if os.IsNotExist(err) {
-				panic("cloudflare secret file not found")
+				panic("secret file not found")
 			} else {
 				panic(fmt.Sprintf("unknown error: %v", err))
 			}
@@ -58,10 +60,20 @@ func InitCloudflareSecret() {
 		if err != nil {
 			panic(fmt.Sprintf("read secret file error: %v", err))
 		}
-		if err = yaml.Unmarshal(secret, &provider.CloudflareSecret); err != nil {
-			panic(fmt.Sprintf("map cloudflare secret error: %v", err))
+		if err = yaml.Unmarshal(secret, target); err != nil {
+			panic(fmt.Sprintf("map secret error: %v", err))
 		}
 	}
+}
+
+// InitCloudflareSecret 初始化 Cloudflare secret 配置
+func InitCloudflareSecret() {
+	readSecret(provider.ScriptConfig.Cloudflare.Secret, &provider.CloudflareSecret)
+}
+
+// InitAliyunSecret 初始化 Aliyun secret 配置
+func InitAliyunSecret() {
+	readSecret(provider.ScriptConfig.Aliyun.Secret, &provider.AliyunSecret)
 }
 
 // LoadGetMyIPApi 加载 get my ip API 接口

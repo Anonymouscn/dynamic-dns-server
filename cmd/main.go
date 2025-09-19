@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/Anonymouscn/dynamic-dns-server/bootstrap"
-	"github.com/Anonymouscn/dynamic-dns-server/cron"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Anonymouscn/dynamic-dns-server/bootstrap"
+	"github.com/Anonymouscn/dynamic-dns-server/cron"
 )
 
 func main() {
