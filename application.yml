@@ -10,5 +10,5 @@ cloudflare:
 aliyun:
   secret: ./secret/aliyun/aliyun.secret.yml # aliyun secret 文件路径
   proxy: false # 是否由 CDN 代理
-  ttl: 300
+  ttl: 5 # DNS 缓存生存时间 (秒/s, 企业版最小 1s，个人版最小 600s = 10min)
   type: A # 域名记录类型 (默认为 A, 主记录)

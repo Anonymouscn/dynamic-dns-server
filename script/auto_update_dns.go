@@ -1,12 +1,14 @@
 package script
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Anonymouscn/dynamic-dns-server/action/checkIP"
 	"github.com/Anonymouscn/dynamic-dns-server/action/cloudflare"
 	"github.com/Anonymouscn/dynamic-dns-server/constant"
+	dnserr "github.com/Anonymouscn/dynamic-dns-server/data/error"
 	cloudflare2 "github.com/Anonymouscn/dynamic-dns-server/data/req/cloudflare"
 	"github.com/Anonymouscn/dynamic-dns-server/provider"
 	alidns "github.com/alibabacloud-go/alidns-20150109/v2/client"
@@ -173,12 +175,19 @@ func (handler *AliyunHandler) createAliyunDnsClient() *alidns.Client {
 func (handler *AliyunHandler) getTargetDNSRecord() (string, string, error) {
 	conf := provider.ScriptConfig
 	aliConf := provider.AliyunSecret
-	resp, err := handler.DescribeDomainRecords(&alidns.DescribeDomainRecordsRequest{
+	req := &alidns.DescribeDomainRecordsRequest{
 		DomainName: &aliConf.TargetDomain,
 		Type:       &conf.Aliyun.Type,
-	})
+	}
+	if aliConf.RR != "" && aliConf.RR != "@" {
+		req.KeyWord = &aliConf.RR
+	}
+	resp, err := handler.DescribeDomainRecords(req)
 	if err != nil {
 		return "", "", err
+	}
+	if len(resp.Body.DomainRecords.Record) == 0 {
+		return "", "", dnserr.RecordNotFoundErr
 	}
 	if tea.BoolValue(teautil.IsUnset(tea.ToMap(resp))) ||
 		tea.BoolValue(teautil.IsUnset(tea.ToMap(resp.Body.DomainRecords.Record[0]))) {
@@ -190,11 +199,29 @@ func (handler *AliyunHandler) getTargetDNSRecord() (string, string, error) {
 
 // modifyAliyunDnsRecord 修改 DNS 记录
 func (handler *AliyunHandler) modifyAliyunDnsRecord(recordID, value string) error {
+	conf, aliConf := provider.ScriptConfig, provider.AliyunSecret
 	_, err := handler.UpdateDomainRecord(&alidns.UpdateDomainRecordRequest{
 		RecordId: &recordID,
+		RR:       &aliConf.RR,
+		Type:     &conf.Aliyun.Type,
 		Value:    &value,
-		RR:       &provider.AliyunSecret.RR,
-		Type:     &provider.ScriptConfig.Aliyun.Type,
+		TTL:      &conf.Aliyun.TTL,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// addAliyunDnsRecord 添加 DNS 记录
+func (handler *AliyunHandler) addAliyunDnsRecord(ip string) error {
+	conf, aliConf := provider.ScriptConfig, provider.AliyunSecret
+	_, err := handler.AddDomainRecord(&alidns.AddDomainRecordRequest{
+		DomainName: &aliConf.TargetDomain,
+		RR:         &aliConf.RR,
+		Type:       &conf.Aliyun.Type,
+		Value:      &ip,
+		TTL:        &conf.Aliyun.TTL,
 	})
 	if err != nil {
 		return err
@@ -213,6 +240,17 @@ func (handler *AliyunHandler) AutoUpdateDNS() {
 	// 获取当前 DNS 生效的 IP
 	record, id, err := handler.getTargetDNSRecord()
 	if err != nil {
+		// 没有 dns 记录，添加 dns 记录
+		log.Println(
+			fmt.Sprintf("not dns record found, add a new record -> %v[%v]",
+				currentIP, ProxyNotSupportState),
+		)
+		if errors.Is(err, dnserr.RecordNotFoundErr) {
+			if err := handler.addAliyunDnsRecord(currentIP); err != nil {
+				log.Println(fmt.Sprintf("add dns record fail: %v", err))
+			}
+			return
+		}
 		log.Println(fmt.Sprintf("get dns record fail: %v", err))
 		return
 	}
